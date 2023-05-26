@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import ec.com.learning.reactor.app.models.User;
 import reactor.core.publisher.Flux;
 
 @SpringBootApplication
@@ -19,21 +20,25 @@ public class SpringbootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux<String> names = Flux.just("Andres", "Pedro", "Diego", "Juan").doOnNext(e -> {
-			if (e.isEmpty()) {
-				throw new RuntimeException("Names can't be empty");
-			}
-			System.out.println(e);
-		});
-		names.subscribe(e -> log.info(e), error -> log.error(error.getMessage()),
-				new Runnable() {
-					
-					@Override
-					public void run() {
-						log.info("Observable process's finalized successfully");
-						
+		Flux<User> names = Flux.just("Andres", "Pedro", "Diego", "Juan").map(name -> new User(name.toUpperCase(), null))
+				.doOnNext(user -> {
+					if (user == null) {
+						throw new RuntimeException("Names can't be empty");
 					}
+					System.out.println(user.getName());
+				}).map(user -> {
+					user.setName(user.getName().toLowerCase());
+					return user;
 				});
+
+		names.subscribe(e -> log.info(e.toString()), error -> log.error(error.getMessage()), new Runnable() {
+
+			@Override
+			public void run() {
+				log.info("Observable process's finalized successfully");
+
+			}
+		});
 
 	}
 
