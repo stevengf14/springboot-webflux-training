@@ -20,12 +20,14 @@ public class SpringbootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux<User> names = Flux.just("Andres", "Pedro", "Diego", "Juan").map(name -> new User(name.toUpperCase(), null))
-				.doOnNext(user -> {
+		Flux<User> names = Flux
+				.just("Andres Guzman", "Pedro Fulano", "Diego Sultano", "Juan Megano", "Bruce Lee", "Bruce Willis")
+				.map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
+				.filter(user -> user.getName().toLowerCase().equals("bruce")).doOnNext(user -> {
 					if (user == null) {
 						throw new RuntimeException("Names can't be empty");
 					}
-					System.out.println(user.getName());
+					System.out.println(user.getName() + " " + user.getLastName());
 				}).map(user -> {
 					user.setName(user.getName().toLowerCase());
 					return user;
