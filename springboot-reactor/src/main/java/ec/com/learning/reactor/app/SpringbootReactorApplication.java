@@ -1,5 +1,6 @@
 package ec.com.learning.reactor.app;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +34,22 @@ public class SpringbootReactorApplication implements CommandLineRunner {
 		// userCommentsFlatMapExample();
 		// userCommentsZipWithExample();
 		// userCommentsZipWithExample2();
-		userCommentsZipRangesWithExample();
+		// userCommentsZipRangesWithExample();
+		// intervalExample();
+		delayElementsExample();
+	}
+
+	public void delayElementsExample() {
+		Flux<Integer> range = Flux.range(1, 12).delayElements(Duration.ofSeconds(1))
+				.doOnNext(i -> log.info(i.toString()));
+		range.blockLast();
+	}
+
+	public void intervalExample() {
+		Flux<Integer> range = Flux.range(1, 12);
+		Flux<Long> delay = Flux.interval(Duration.ofSeconds(1));
+
+		range.zipWith(delay, (ra, de) -> ra).doOnNext(i -> log.info(i.toString())).blockLast();
 	}
 
 	public void userCommentsZipRangesWithExample() {
