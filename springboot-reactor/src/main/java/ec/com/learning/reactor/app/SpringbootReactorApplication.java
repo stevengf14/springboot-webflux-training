@@ -9,7 +9,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import ec.com.learning.reactor.app.models.Comments;
 import ec.com.learning.reactor.app.models.User;
+import ec.com.learning.reactor.app.models.UserComments;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +29,59 @@ public class SpringbootReactorApplication implements CommandLineRunner {
 		// iterableExample();
 		// flatMapExample();
 		// toStringExample();
-		collectListExample();
+		// collectListExample();
+		// userCommentsFlatMapExample();
+		// userCommentsZipWithExample();
+		userCommentsZipWithExample2();
+	}
+
+	public void userCommentsZipWithExample2() {
+		Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+		Mono<Comments> userMonoComments = Mono.fromCallable(() -> {
+			Comments comments = new Comments();
+			comments.addComment("Hey this is an example!");
+			comments.addComment("We're learning webflux");
+			comments.addComment("I'm working so hard!");
+			return comments;
+		});
+
+		Mono<UserComments> userWithComments = userMono.zipWith(userMonoComments).map(tuple -> {
+			User u = tuple.getT1();
+			Comments c = tuple.getT2();
+			return new UserComments(u, c);
+		});
+
+		userWithComments.subscribe(uc -> log.info(uc.toString()));
+	}
+
+	public void userCommentsZipWithExample() {
+		Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+		Mono<Comments> userMonoComments = Mono.fromCallable(() -> {
+			Comments comments = new Comments();
+			comments.addComment("Hey this is an example!");
+			comments.addComment("We're learning webflux");
+			comments.addComment("I'm working so hard!");
+			return comments;
+		});
+
+		Mono<UserComments> userWithComments = userMono.zipWith(userMonoComments,
+				(user, comments) -> new UserComments(user, comments));
+
+		userWithComments.subscribe(uc -> log.info(uc.toString()));
+	}
+
+	public void userCommentsFlatMapExample() {
+		Mono<User> userMono = Mono.fromCallable(() -> new User("John", "Doe"));
+		Mono<Comments> userMonoComments = Mono.fromCallable(() -> {
+			Comments comments = new Comments();
+			comments.addComment("Hey this is an example!");
+			comments.addComment("We're learning webflux");
+			comments.addComment("I'm working so hard!");
+			return comments;
+		});
+
+		userMono.flatMap(u -> userMonoComments.map(c -> new UserComments(u, c)))
+				.subscribe(uc -> log.info(uc.toString()));
 	}
 
 	public void collectListExample() {
