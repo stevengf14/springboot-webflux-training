@@ -3,6 +3,7 @@ package ec.com.learning.reactor.app;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,21 @@ public class SpringbootReactorApplication implements CommandLineRunner {
 		// userCommentsZipWithExample2();
 		// userCommentsZipRangesWithExample();
 		// intervalExample();
-		delayElementsExample();
+		// delayElementsExample();
+		infiniteIntervalExample();
+	}
+
+	public void infiniteIntervalExample() throws InterruptedException {
+		CountDownLatch latch = new CountDownLatch(1);
+
+		Flux.interval(Duration.ofSeconds(1)).doOnTerminate(latch::countDown).flatMap(i -> {
+			if (i >= 5) {
+				return Flux.error(new InterruptedException("5!!!"));
+			}
+			return Flux.just(i);
+		}).map(i -> "Hi " + i).retry(2).subscribe(s -> log.info(s), e -> log.error(e.getMessage()));
+
+		latch.await();
 	}
 
 	public void delayElementsExample() {
