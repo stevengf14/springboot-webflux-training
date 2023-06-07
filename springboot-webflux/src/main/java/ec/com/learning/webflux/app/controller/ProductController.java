@@ -12,6 +12,7 @@ import org.thymeleaf.spring6.context.webflux.ReactiveDataDriverContextVariable;
 
 import ec.com.learning.webflux.app.models.dao.ProductDao;
 import ec.com.learning.webflux.app.models.documents.Product;
+import io.netty.handler.stream.ChunkedStream;
 import reactor.core.publisher.Flux;
 
 @Controller
@@ -44,6 +45,18 @@ public class ProductController {
 		products.subscribe(prod -> log.info(prod.getName()));
 
 		model.addAttribute("products", new ReactiveDataDriverContextVariable(products, 1));
+		model.addAttribute("title", "List of products");
+		return "list";
+	}
+	
+	@GetMapping("/list-full")
+	public String listFull(Model model) {
+		Flux<Product> products = dao.findAll().map(product -> {
+			product.setName(product.getName().toUpperCase());
+			return product;
+		}).repeat(5000);
+
+		model.addAttribute("products", products);
 		model.addAttribute("title", "List of products");
 		return "list";
 	}
