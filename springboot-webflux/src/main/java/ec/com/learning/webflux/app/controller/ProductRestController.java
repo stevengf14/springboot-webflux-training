@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ec.com.learning.webflux.app.models.dao.ProductDao;
 import ec.com.learning.webflux.app.models.documents.Product;
+import ec.com.learning.webflux.app.models.services.ProductService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,13 +18,13 @@ import reactor.core.publisher.Mono;
 public class ProductRestController {
 
 	@Autowired
-	private ProductDao dao;
+	private ProductService service;
 
 	private static final Logger log = LoggerFactory.getLogger(ProductRestController.class);
 
 	@GetMapping
 	public Flux<Product> index() {
-		Flux<Product> products = dao.findAll().map(product -> {
+		Flux<Product> products = service.findAll().map(product -> {
 			product.setName(product.getName().toUpperCase());
 			return product;
 		}).doOnNext(prod -> log.info(prod.getName()));
@@ -35,7 +35,7 @@ public class ProductRestController {
 	@GetMapping("/{id}")
 	public Mono<Product> show(@PathVariable String id) {
 		// return dao.findById(id);
-		Flux<Product> products = dao.findAll();
+		Flux<Product> products = service.findAll();
 		Mono<Product> product = products.filter(p -> p.getId().equals(id)).next()
 				.doOnNext(prod -> log.info(prod.getName()));
 		return product;
