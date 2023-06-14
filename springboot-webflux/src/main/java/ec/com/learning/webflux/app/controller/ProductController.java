@@ -46,7 +46,7 @@ public class ProductController {
 	public Mono<String> save(Product product) {
 		return service.save(product).doOnNext(p -> {
 			log.info("Product saved: " + p.getName() + " Id: " + p.getId());
-		}).thenReturn("redirect;/list");
+		}).thenReturn("redirect:/list");
 	}
 
 	@GetMapping("/list-datadriver")
