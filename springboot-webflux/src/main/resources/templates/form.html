@@ -9,6 +9,7 @@
 	<div>
 		<a th:href="@{/list}">get back</a>
 		<form th:action="@{/form}" method="post" th:object="${product}">
+			<!-- <input th:if="${product.id != null}" type="hidden" th:field="*{id}" /> -->
 			<div>
 				<label for="name">Name</label>
 				<div>

@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
 import org.thymeleaf.spring6.context.webflux.ReactiveDataDriverContextVariable;
 
 import ec.com.learning.webflux.app.models.documents.Product;
@@ -17,6 +20,7 @@ import io.netty.handler.stream.ChunkedStream;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@SessionAttributes("product")
 @Controller
 public class ProductController {
 
@@ -42,8 +46,20 @@ public class ProductController {
 		return Mono.just("form");
 	}
 
+	@GetMapping("/form/{id}")
+	public Mono<String> edit(@PathVariable String id, Model model) {
+		Mono<Product> monoProduct = service.findById(id).doOnNext(p -> {
+			log.info("Product: " + p.getName());
+		}).defaultIfEmpty(new Product());
+		model.addAttribute("title", "Edit Product");
+		model.addAttribute("product", monoProduct);
+
+		return Mono.just("form");
+	}
+
 	@PostMapping("/form")
-	public Mono<String> save(Product product) {
+	public Mono<String> save(Product product, SessionStatus status) {
+		status.setComplete();
 		return service.save(product).doOnNext(p -> {
 			log.info("Product saved: " + p.getName() + " Id: " + p.getId());
 		}).thenReturn("redirect:/list");
