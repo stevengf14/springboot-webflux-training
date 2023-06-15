@@ -9,7 +9,7 @@ public interface ProductService {
 	public Flux<Product> findAll();
 
 	public Flux<Product> findAllWithUpperCaseName();
-	
+
 	public Flux<Product> findAllWithUpperCaseNameRepeat();
 
 	public Mono<Product> findById(String id);
