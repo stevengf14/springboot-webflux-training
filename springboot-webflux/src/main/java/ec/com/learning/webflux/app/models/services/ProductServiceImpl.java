@@ -3,7 +3,9 @@ package ec.com.learning.webflux.app.models.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ec.com.learning.webflux.app.models.dao.CategoryDao;
 import ec.com.learning.webflux.app.models.dao.ProductDao;
+import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -13,6 +15,9 @@ public class ProductServiceImpl implements ProductService {
 
 	@Autowired
 	private ProductDao dao;
+
+	@Autowired
+	private CategoryDao categoryDao;
 
 	@Override
 	public Flux<Product> findAll() {
@@ -45,6 +50,21 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public Flux<Product> findAllWithUpperCaseNameRepeat() {
 		return findAllWithUpperCaseName().repeat(5000);
+	}
+
+	@Override
+	public Flux<Category> findAllCategories() {
+		return categoryDao.findAll();
+	}
+
+	@Override
+	public Mono<Category> findCategoryById(String id) {
+		return categoryDao.findById(id);
+	}
+
+	@Override
+	public Mono<Category> saveCategory(Category category) {
+		return categoryDao.save(category);
 	}
 
 }

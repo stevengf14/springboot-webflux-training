@@ -1,5 +1,6 @@
 package ec.com.learning.webflux.app.models.services;
 
+import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,4 +18,11 @@ public interface ProductService {
 	public Mono<Product> save(Product product);
 
 	public Mono<Void> delete(Product product);
+
+	public Flux<Category> findAllCategories();
+
+	public Mono<Category> findCategoryById(String id);
+
+	public Mono<Category> saveCategory(Category category);
+
 }
