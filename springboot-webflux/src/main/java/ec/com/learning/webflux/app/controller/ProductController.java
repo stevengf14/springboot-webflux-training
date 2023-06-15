@@ -1,12 +1,14 @@
 package ec.com.learning.webflux.app.controller;
 
 import java.time.Duration;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.thymeleaf.spring6.context.webflux.ReactiveDataDriverContextVariable;
 import ec.com.learning.webflux.app.models.documents.Product;
 import ec.com.learning.webflux.app.models.services.ProductService;
 import io.netty.handler.stream.ChunkedStream;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -74,11 +77,21 @@ public class ProductController {
 	}
 
 	@PostMapping("/form")
-	public Mono<String> save(Product product, SessionStatus status) {
-		status.setComplete();
-		return service.save(product).doOnNext(p -> {
-			log.info("Product saved: " + p.getName() + " Id: " + p.getId());
-		}).thenReturn("redirect:/list");
+	public Mono<String> save(@Valid Product product, BindingResult result, Model model, SessionStatus status) {
+		if (result.hasErrors()) {
+			model.addAttribute("title", "Errors in Product Form");
+			model.addAttribute("button", "Save");
+			return Mono.just("form");
+		} else {
+			status.setComplete();
+			if (product.getCreateAt() == null) {
+				product.setCreateAt(new Date());
+			}
+			return service.save(product).doOnNext(p -> {
+				log.info("Product saved: " + p.getName() + " Id: " + p.getId());
+			}).thenReturn("redirect:/list?success=product+saved+successfully");
+		}
+
 	}
 
 	@GetMapping("/list-datadriver")

@@ -25,7 +25,7 @@
 				<td th:text="${product.name}"></td>
 				<td th:text="${product.price}"></td>
 				<td th:text="${product.createAt}"></td>
-				<td><a th:href="@{/form/}+${product.id}">edit</td>
+				<td><a th:href="@{/form/}+${product.id}" />edit</td>
 			</tr>
 		</tbody>
 	</table>
