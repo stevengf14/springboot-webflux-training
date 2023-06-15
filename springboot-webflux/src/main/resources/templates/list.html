@@ -26,6 +26,8 @@
 				<td th:text="${product.price}"></td>
 				<td th:text="${product.createAt}"></td>
 				<td><a th:href="@{/form/}+${product.id}" />edit</td>
+				<td><a th:href="@{/delete/}+${product.id}"
+					onclick="return confirm('Are you sure you want to delete the user?')" />delete</td>
 			</tr>
 		</tbody>
 	</table>

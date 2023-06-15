@@ -91,7 +91,17 @@ public class ProductController {
 				log.info("Product saved: " + p.getName() + " Id: " + p.getId());
 			}).thenReturn("redirect:/list?success=product+saved+successfully");
 		}
+	}
 
+	@GetMapping("/delete/{id}")
+	public Mono<String> delete(@PathVariable String id) {
+		return service.findById(id).defaultIfEmpty(new Product()).flatMap(p -> {
+			if (p.getId() == null) {
+				return Mono.error(new InterruptedException("Product does not exists"));
+			}
+			return Mono.just(p);
+		}).flatMap(service::delete).then(Mono.just("redirect:/list?success=product+deleted+successfully"))
+				.onErrorResume(ex -> Mono.just("redirect:/list?error=product+does+not+exists"));
 	}
 
 	@GetMapping("/list-datadriver")
