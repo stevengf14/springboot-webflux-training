@@ -28,6 +28,8 @@ public class Product {
 	@Valid
 	private Category category;
 
+	private String photo;
+
 	public Product() {
 	}
 
@@ -79,6 +81,14 @@ public class Product {
 
 	public void setCategory(Category category) {
 		this.category = category;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
 	}
 
 }
