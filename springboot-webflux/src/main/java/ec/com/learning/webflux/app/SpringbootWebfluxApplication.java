@@ -12,14 +12,14 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 
 import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
-import ec.com.learning.webflux.app.models.services.ProductServiceImpl;
+import ec.com.learning.webflux.app.models.services.ProductService;
 import reactor.core.publisher.Flux;
 
 @SpringBootApplication
 public class SpringbootWebfluxApplication implements CommandLineRunner {
 
 	@Autowired
-	private ProductServiceImpl service;
+	private ProductService service;
 
 	@Autowired
 	private ReactiveMongoTemplate mongoTemplate;

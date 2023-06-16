@@ -12,11 +12,13 @@
 	<table>
 		<thead>
 			<tr>
-				<th>id</th>
-				<th>name</th>
-				<th>price</th>
-				<th>date</th>
-				<th>edit</th>
+				<th>Id</th>
+				<th>Name</th>
+				<th>rice</th>
+				<th>Date</th>
+				<th>Category</th>
+				<th>Edit</th>
+				<th>Delete</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -25,6 +27,7 @@
 				<td th:text="${product.name}"></td>
 				<td th:text="${product.price}"></td>
 				<td th:text="${product.createAt}"></td>
+				<td th:text="${product.category.name}"></td>
 				<td><a th:href="@{/form/}+${product.id}" />edit</td>
 				<td><a th:href="@{/delete/}+${product.id}"
 					onclick="return confirm('Are you sure you want to delete the user?')" />delete</td>

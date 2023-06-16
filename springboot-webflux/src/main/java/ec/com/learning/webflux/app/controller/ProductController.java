@@ -10,12 +10,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.thymeleaf.spring6.context.webflux.ReactiveDataDriverContextVariable;
 
+import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
 import ec.com.learning.webflux.app.models.services.ProductService;
 import io.netty.handler.stream.ChunkedStream;
@@ -31,6 +33,11 @@ public class ProductController {
 	private ProductService service;
 
 	private static final Logger log = LoggerFactory.getLogger(ProductController.class);
+
+	@ModelAttribute("categories")
+	public Flux<Category> categories() {
+		return service.findAllCategories();
+	}
 
 	@GetMapping({ "/list", "/" })
 	public Mono<String> list(Model model) {
