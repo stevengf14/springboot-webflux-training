@@ -23,14 +23,15 @@
 		</thead>
 		<tbody>
 			<tr th:each="product: ${products}">
-				<td th:text="${product.id}"></td>
+				<td><a th:href="@{/view/}+${product.id}"
+					th:text="${#strings.abbreviate(product.id,10)}"></a></td>
 				<td th:text="${product.name}"></td>
-				<td th:text="${product.price}"></td>
-				<td th:text="${product.createAt}"></td>
+				<td th:text="${#numbers.formatCurrency(product.price)}"></td>
+				<td th:text="${#calendars.format(product.createAt, 'dd/MM/yyyy')}"></td>
 				<td th:text="${product.category.name}"></td>
-				<td><a th:href="@{/form/}+${product.id}" />edit</td>
+				<td><a th:href="@{/form/}+${product.id}">edit</a></td>
 				<td><a th:href="@{/delete/}+${product.id}"
-					onclick="return confirm('Are you sure you want to delete the user?')" />delete</td>
+					onclick="return confirm('Are you sure you want to delete the user?')">delete</a></td>
 			</tr>
 		</tbody>
 	</table>
