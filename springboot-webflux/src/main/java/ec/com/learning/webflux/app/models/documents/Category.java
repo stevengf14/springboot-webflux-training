@@ -3,10 +3,13 @@ package ec.com.learning.webflux.app.models.documents;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.NotBlank;
+
 @Document(collection = "categories")
 public class Category {
 
 	@Id
+	@NotBlank(message = "Can't be empty")
 	private String id;
 
 	private String name;

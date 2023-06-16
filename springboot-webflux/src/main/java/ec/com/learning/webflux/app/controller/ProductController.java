@@ -91,10 +91,15 @@ public class ProductController {
 			return Mono.just("form");
 		} else {
 			status.setComplete();
-			if (product.getCreateAt() == null) {
-				product.setCreateAt(new Date());
-			}
-			return service.save(product).doOnNext(p -> {
+			Mono<Category> category = service.findCategoryById(product.getCategory().getId());
+			return category.flatMap(c -> {
+				if (product.getCreateAt() == null) {
+					product.setCreateAt(new Date());
+				}
+				product.setCategory(c);
+				return service.save(product);
+			}).doOnNext(p -> {
+				log.info("Category asigned: " + p.getCategory().getName() + ", Id: " + p.getCategory().getId());
 				log.info("Product saved: " + p.getName() + " Id: " + p.getId());
 			}).thenReturn("redirect:/list?success=product+saved+successfully");
 		}
