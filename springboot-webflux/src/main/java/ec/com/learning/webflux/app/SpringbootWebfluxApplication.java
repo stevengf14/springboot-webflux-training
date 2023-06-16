@@ -10,15 +10,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 
-import ec.com.learning.webflux.app.models.dao.ProductDao;
+import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
+import ec.com.learning.webflux.app.models.services.ProductServiceImpl;
 import reactor.core.publisher.Flux;
 
 @SpringBootApplication
 public class SpringbootWebfluxApplication implements CommandLineRunner {
 
 	@Autowired
-	private ProductDao dao;
+	private ProductServiceImpl service;
 
 	@Autowired
 	private ReactiveMongoTemplate mongoTemplate;
@@ -32,17 +33,27 @@ public class SpringbootWebfluxApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		mongoTemplate.dropCollection("products").subscribe();
+		mongoTemplate.dropCollection("categories").subscribe();
 
-		Flux.just(new Product("TV Panasonic LCD", 456.89), new Product("Xiaomi Redmi Note Pro 11", 350.50),
-				new Product("IPod touch 256GB", 356.45), new Product("IPad mini 256GB", 850.00),
-				new Product("Canon T7i", 650.25), new Product("Asus ROG Strix", 1950.75),
-				new Product("TV  TCL 55", 750.25), new Product("Monitor LG 55", 450.72),
-				new Product("Lenovo Yoga Tab 128GB", 230.25), new Product("Mouse + Keyboard", 15.43))
+		Category electronic = new Category("Electronic");
+		Category sports = new Category("Sports");
+		Category computation = new Category("Computation");
+		Category furniture = new Category("Furniture");
+
+		Flux.just(electronic, sports, computation, furniture).flatMap(service::saveCategory).doOnNext(c -> {
+			log.info("Category created: " + c.getName() + ", Id: " + c.getId());
+		}).thenMany(Flux.just(new Product("TV Panasonic LCD", 456.89, electronic),
+				new Product("Xiaomi Redmi Note Pro 11", 350.50, electronic),
+				new Product("IPod touch 256GB", 356.45, electronic), new Product("IPad mini 256GB", 850.00, electronic),
+				new Product("Canon T7i", 650.25, electronic), new Product("Asus ROG Strix", 1950.75, computation),
+				new Product("TV  TCL 55", 750.25, electronic), new Product("Monitor LG 55", 450.72, computation),
+				new Product("Shoes Under Armour Running", 150.72, sports),
+				new Product("Lenovo Yoga Tab 128GB", 230.25, computation),
+				new Product("Desktop - wood", 230.25, furniture), new Product("Mouse + Keyboard", 15.43, computation))
 				.flatMap(product -> {
 					product.setCreateAt(new Date());
-					return dao.save(product);
-				}).subscribe(product -> log.info("Insert:" + product.getId() + " " + product.getName()));
-
+					return service.save(product);
+				})).subscribe(product -> log.info("Insert:" + product.getId() + " " + product.getName()));
 	}
 
 }
