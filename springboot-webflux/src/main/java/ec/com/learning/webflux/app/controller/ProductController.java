@@ -1,6 +1,9 @@
 package ec.com.learning.webflux.app.controller;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
@@ -9,6 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,6 +52,16 @@ public class ProductController {
 	@ModelAttribute("categories")
 	public Flux<Category> categories() {
 		return service.findAllCategories();
+	}
+
+	@GetMapping("/uploads/img/{photoName:.+}")
+	public Mono<ResponseEntity<Resource>> viewPhoto(@PathVariable String photoName) throws MalformedURLException {
+		Path photoPath = Paths.get(path).resolve(photoName).toAbsolutePath();
+		Resource image = new UrlResource(photoPath.toUri());
+		return Mono.just(ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFilename() + "\"")
+				.body(image));
+
 	}
 
 	@GetMapping("/view/{id}")
