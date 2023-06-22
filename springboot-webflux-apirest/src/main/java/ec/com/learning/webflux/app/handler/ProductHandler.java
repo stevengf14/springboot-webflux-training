@@ -1,12 +1,16 @@
 package ec.com.learning.webflux.app.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -20,6 +24,9 @@ public class ProductHandler {
 
 	@Autowired
 	private ProductService service;
+
+	@Value("${config.uploads.path}")
+	private String path;
 
 	public Mono<ServerResponse> list(ServerRequest request) {
 		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(service.findAll(), Product.class);
@@ -61,6 +68,19 @@ public class ProductHandler {
 		String id = request.pathVariable("id");
 		Mono<Product> productDb = service.findById(id);
 		return productDb.flatMap(p -> service.delete(p).then(ServerResponse.noContent().build()))
+				.switchIfEmpty(ServerResponse.notFound().build());
+	}
+
+	public Mono<ServerResponse> upload(ServerRequest request) {
+		String id = request.pathVariable("id");
+		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
+				.flatMap(file -> service.findById(id).flatMap(p -> {
+					p.setPhoto(UUID.randomUUID().toString() + "-"
+							+ file.filename().replace(" ", "").replace(":", "").replace("\\", ""));
+					return file.transferTo(new File(path + p.getPhoto())).then(service.save(p));
+				}))
+				.flatMap(p -> ServerResponse.created(URI.create("/api/v2/products/".concat(p.getId())))
+						.contentType(MediaType.APPLICATION_JSON_UTF8).body(fromObject(p)))
 				.switchIfEmpty(ServerResponse.notFound().build());
 	}
 
