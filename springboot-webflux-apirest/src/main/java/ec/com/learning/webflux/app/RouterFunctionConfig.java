@@ -17,7 +17,8 @@ public class RouterFunctionConfig {
 	public RouterFunction<ServerResponse> routes(ProductHandler handler) {
 		return route(GET("/api/v2/products").or(GET("/api/v3/products")), handler::list)
 				.andRoute(GET("/api/v3/products/{id}"), handler::view)
-				.andRoute(POST("/api/ve/products"), handler::create);
+				.andRoute(POST("/api/ve/products"), handler::create)
+				.andRoute(PUT("/api/ve/products/{id}"), handler::edit);
 	}
 
 }
