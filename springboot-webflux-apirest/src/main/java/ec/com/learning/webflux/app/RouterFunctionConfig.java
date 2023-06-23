@@ -16,11 +16,12 @@ public class RouterFunctionConfig {
 	@Bean
 	public RouterFunction<ServerResponse> routes(ProductHandler handler) {
 		return route(GET("/api/v2/products").or(GET("/api/v3/products")), handler::list)
-				.andRoute(GET("/api/v3/products/{id}"), handler::view)
-				.andRoute(POST("/api/ve/products"), handler::create)
-				.andRoute(PUT("/api/ve/products/{id}"), handler::edit)
-				.andRoute(DELETE("/api/ve/products/{id}"), handler::delete)
-				.andRoute(POST("/api/ve/products/upload/{id}"), handler::upload);
+				.andRoute(GET("/api/v2/products/{id}"), handler::view)
+				.andRoute(POST("/api/v2/products"), handler::create)
+				.andRoute(PUT("/api/v2/products/{id}"), handler::edit)
+				.andRoute(DELETE("/api/v2/products/{id}"), handler::delete)
+				.andRoute(POST("/api/v2/products/upload/{id}"), handler::upload)
+				.andRoute(POST("/api/v2/products/create"), handler::createWithPhoto);
 	}
 
 }

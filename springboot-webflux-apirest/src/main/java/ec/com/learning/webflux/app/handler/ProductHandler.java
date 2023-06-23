@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.FormFieldPart;
 import org.springframework.stereotype.Component;
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
 import ec.com.learning.webflux.app.models.services.ProductService;
 import reactor.core.publisher.Mono;
@@ -82,6 +84,26 @@ public class ProductHandler {
 				.flatMap(p -> ServerResponse.created(URI.create("/api/v2/products/".concat(p.getId())))
 						.contentType(MediaType.APPLICATION_JSON_UTF8).body(fromObject(p)))
 				.switchIfEmpty(ServerResponse.notFound().build());
+	}
+
+	public Mono<ServerResponse> createWithPhoto(ServerRequest request) {
+		Mono<Product> product = request.multipartData().map(multipart -> {
+			FormFieldPart name = (FormFieldPart) multipart.toSingleValueMap().get("name");
+			FormFieldPart price = (FormFieldPart) multipart.toSingleValueMap().get("price");
+			FormFieldPart categoryId = (FormFieldPart) multipart.toSingleValueMap().get("category.id");
+			FormFieldPart categoryName = (FormFieldPart) multipart.toSingleValueMap().get("category.name");
+			Category category = new Category(categoryName.value());
+			category.setId(categoryId.value());
+			return new Product(name.value(), Double.parseDouble(price.value()), category);
+		});
+		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
+				.flatMap(file -> product.flatMap(p -> {
+					p.setPhoto(UUID.randomUUID().toString() + "-"
+							+ file.filename().replace(" ", "").replace(":", "").replace("\\", ""));
+					p.setCreateAt(new Date());
+					return file.transferTo(new File(path + p.getPhoto())).then(service.save(p));
+				})).flatMap(p -> ServerResponse.created(URI.create("/api/v2/products/".concat(p.getId())))
+						.contentType(MediaType.APPLICATION_JSON_UTF8).body(fromObject(p)));
 	}
 
 }
