@@ -6,6 +6,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.FormFieldPart;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
 import java.io.File;
@@ -19,6 +22,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import ec.com.learning.webflux.app.models.documents.Category;
 import ec.com.learning.webflux.app.models.documents.Product;
 import ec.com.learning.webflux.app.models.services.ProductService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -29,6 +33,9 @@ public class ProductHandler {
 
 	@Value("${config.uploads.path}")
 	private String path;
+
+	@Autowired
+	private org.springframework.validation.Validator validator;
 
 	public Mono<ServerResponse> list(ServerRequest request) {
 		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(service.findAll(), Product.class);
@@ -44,12 +51,22 @@ public class ProductHandler {
 	public Mono<ServerResponse> create(ServerRequest request) {
 		Mono<Product> product = request.bodyToMono(Product.class);
 		return product.flatMap(p -> {
-			if (p.getCreateAt() == null) {
-				p.setCreateAt(new Date());
+			Errors errors = new BeanPropertyBindingResult(p, Product.class.getName());
+			validator.validate(p, errors);
+			if (errors.hasErrors()) {
+				return Flux.fromIterable(errors.getFieldErrors())
+						.map(fieldError -> "The field " + fieldError.getField() + " " + fieldError.getDefaultMessage())
+						.collectList().flatMap(list -> ServerResponse.badRequest().body(fromObject(list)));
+			} else {
+				if (p.getCreateAt() == null) {
+					p.setCreateAt(new Date());
+				}
+				return service.save(p)
+						.flatMap(pdb -> ServerResponse.created(URI.create("/api/v2/products/".concat(pdb.getId())))
+								.contentType(MediaType.APPLICATION_JSON_UTF8).body(fromObject(pdb)));
 			}
-			return service.save(p);
-		}).flatMap(p -> ServerResponse.created(URI.create("/api/v2/products/".concat(p.getId())))
-				.contentType(MediaType.APPLICATION_JSON_UTF8).body(fromObject(p)));
+
+		});
 	}
 
 	public Mono<ServerResponse> edit(ServerRequest request) {
