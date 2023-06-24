@@ -67,4 +67,9 @@ public class ProductServiceImpl implements ProductService {
 		return categoryDao.save(category);
 	}
 
+	@Override
+	public Mono<Product> findByName(String name) {
+		return dao.getByName(name);
+	}
+
 }
