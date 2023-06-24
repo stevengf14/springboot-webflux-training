@@ -1,13 +1,12 @@
 package ec.com.learning.webflux.app;
 
-import static org.mockito.ArgumentMatchers.nullable;
-
 import java.util.Collections;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -26,10 +25,13 @@ class SpringbootWebfluxApirestApplicationTests {
 	@Autowired
 	private ProductService service;
 
+	@Value("${config.base.endpoint}")
+	private String url;
+
 	@Test
 	void listTest() {
-		client.get().uri("/api/v2/products").accept(MediaType.APPLICATION_JSON_UTF8).exchange().expectStatus().isOk()
-				.expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8).expectBodyList(Product.class)
+		client.get().uri(url).accept(MediaType.APPLICATION_JSON_UTF8).exchange().expectStatus().isOk().expectHeader()
+				.contentType(MediaType.APPLICATION_JSON_UTF8).expectBodyList(Product.class)
 				/* .hasSize(12) */
 				.consumeWith(response -> {
 					List<Product> products = response.getResponseBody();
@@ -43,7 +45,7 @@ class SpringbootWebfluxApirestApplicationTests {
 	@Test
 	void viewTest() {
 		Product product = service.findByName("Xiaomi Redmi Note Pro 11").block();
-		client.get().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId()))
+		client.get().uri(url + "/{id}", Collections.singletonMap("id", product.getId()))
 				.accept(MediaType.APPLICATION_JSON_UTF8).exchange().expectStatus().isOk().expectHeader()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				/*
@@ -62,21 +64,19 @@ class SpringbootWebfluxApirestApplicationTests {
 	void createTest() {
 		Category category = service.findCategoryByName("Furniture").block();
 		Product product = new Product("Bike", 150.00, category);
-		client.post().uri("/api/v2/products").contentType(MediaType.APPLICATION_JSON_UTF8)
-				.accept(MediaType.APPLICATION_JSON_UTF8).body(Mono.just(product), Product.class).exchange()
-				.expectStatus().isCreated().expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8).expectBody()
-				.jsonPath("$.id").isNotEmpty().jsonPath("$.name").isEqualTo("Bike").jsonPath("$.category.name")
-				.isEqualTo("Furniture");
+		client.post().uri(url).contentType(MediaType.APPLICATION_JSON_UTF8).accept(MediaType.APPLICATION_JSON_UTF8)
+				.body(Mono.just(product), Product.class).exchange().expectStatus().isCreated().expectHeader()
+				.contentType(MediaType.APPLICATION_JSON_UTF8).expectBody().jsonPath("$.id").isNotEmpty()
+				.jsonPath("$.name").isEqualTo("Bike").jsonPath("$.category.name").isEqualTo("Furniture");
 	}
 
 	@Test
 	void create2Test() {
 		Category category = service.findCategoryByName("Furniture").block();
 		Product product = new Product("Bike", 150.00, category);
-		client.post().uri("/api/v2/products").contentType(MediaType.APPLICATION_JSON_UTF8)
-				.accept(MediaType.APPLICATION_JSON_UTF8).body(Mono.just(product), Product.class).exchange()
-				.expectStatus().isCreated().expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-				.expectBody(Product.class).consumeWith(response -> {
+		client.post().uri(url).contentType(MediaType.APPLICATION_JSON_UTF8).accept(MediaType.APPLICATION_JSON_UTF8)
+				.body(Mono.just(product), Product.class).exchange().expectStatus().isCreated().expectHeader()
+				.contentType(MediaType.APPLICATION_JSON_UTF8).expectBody(Product.class).consumeWith(response -> {
 					Product p = response.getResponseBody();
 					Assertions.assertThat(p.getId()).isNotEmpty();
 					Assertions.assertThat(p.getName()).isEqualTo("Bike");
@@ -89,7 +89,7 @@ class SpringbootWebfluxApirestApplicationTests {
 		Product product = service.findByName("Canon T7i").block();
 		Category category = service.findCategoryByName("Furniture").block();
 		Product editProduct = new Product("Bike", 150.00, category);
-		client.put().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId()))
+		client.put().uri(url + "/{id}", Collections.singletonMap("id", product.getId()))
 				.accept(MediaType.APPLICATION_JSON_UTF8).body(Mono.just(editProduct), Product.class).exchange()
 				.expectStatus().isCreated().expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8).expectBody()
 				.jsonPath("$.id").isNotEmpty().jsonPath("$.name").isEqualTo("Bike").jsonPath("$.category.name")
@@ -99,11 +99,11 @@ class SpringbootWebfluxApirestApplicationTests {
 	@Test
 	void deleteTest() {
 		Product product = service.findByName("Shoes Under Armour Running").block();
-		client.delete().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId())).exchange()
-				.expectStatus().isNoContent().expectBody().isEmpty();
+		client.delete().uri(url + "/{id}", Collections.singletonMap("id", product.getId())).exchange().expectStatus()
+				.isNoContent().expectBody().isEmpty();
 
-		client.get().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId())).exchange()
-				.expectStatus().isNotFound().expectBody().isEmpty();
+		client.get().uri(url + "/{id}", Collections.singletonMap("id", product.getId())).exchange().expectStatus()
+				.isNotFound().expectBody().isEmpty();
 	}
 
 }
