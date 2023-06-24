@@ -84,4 +84,16 @@ class SpringbootWebfluxApirestApplicationTests {
 				});
 	}
 
+	@Test
+	void editTest() {
+		Product product = service.findByName("Xiaomi Redmi Note Pro 11").block();
+		Category category = service.findCategoryByName("Furniture").block();
+		Product editProduct = new Product("Bike", 150.00, category);
+		client.put().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId()))
+				.accept(MediaType.APPLICATION_JSON_UTF8).body(Mono.just(editProduct), Product.class).exchange()
+				.expectStatus().isCreated().expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8).expectBody()
+				.jsonPath("$.id").isNotEmpty().jsonPath("$.name").isEqualTo("Bike").jsonPath("$.category.name")
+				.isEqualTo("Furniture");
+	}
+
 }
