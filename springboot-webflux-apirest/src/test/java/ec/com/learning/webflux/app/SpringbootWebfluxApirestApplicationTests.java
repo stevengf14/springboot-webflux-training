@@ -86,7 +86,7 @@ class SpringbootWebfluxApirestApplicationTests {
 
 	@Test
 	void editTest() {
-		Product product = service.findByName("Xiaomi Redmi Note Pro 11").block();
+		Product product = service.findByName("Canon T7i").block();
 		Category category = service.findCategoryByName("Furniture").block();
 		Product editProduct = new Product("Bike", 150.00, category);
 		client.put().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId()))
@@ -94,6 +94,16 @@ class SpringbootWebfluxApirestApplicationTests {
 				.expectStatus().isCreated().expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8).expectBody()
 				.jsonPath("$.id").isNotEmpty().jsonPath("$.name").isEqualTo("Bike").jsonPath("$.category.name")
 				.isEqualTo("Furniture");
+	}
+
+	@Test
+	void deleteTest() {
+		Product product = service.findByName("Shoes Under Armour Running").block();
+		client.delete().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId())).exchange()
+				.expectStatus().isNoContent().expectBody().isEmpty();
+
+		client.get().uri("/api/v2/products/{id}", Collections.singletonMap("id", product.getId())).exchange()
+				.expectStatus().isNotFound().expectBody().isEmpty();
 	}
 
 }
