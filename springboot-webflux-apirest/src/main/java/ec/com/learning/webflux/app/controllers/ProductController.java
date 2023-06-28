@@ -74,8 +74,8 @@ public class ProductController {
 			});
 		}).onErrorResume(t -> {
 			return Mono.just(t).cast(WebExchangeBindException.class).flatMap(e -> Mono.just(e.getFieldErrors()))
-					.flatMapMany(Flux::fromIterable)
-					.map(fieldError -> "The field " + fieldError.getField().toUpperCase() + " " + fieldError.getDefaultMessage())
+					.flatMapMany(Flux::fromIterable).map(fieldError -> "The field "
+							+ fieldError.getField().toUpperCase() + " " + fieldError.getDefaultMessage())
 					.collectList().flatMap(list -> {
 						response.put("errors", list);
 						response.put("timestamp", new Date());
