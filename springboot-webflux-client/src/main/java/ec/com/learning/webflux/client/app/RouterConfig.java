@@ -15,6 +15,9 @@ public class RouterConfig {
 	@Bean
 	public RouterFunction<ServerResponse> routes(ProductHandler handler) {
 		return RouterFunctions.route(RequestPredicates.GET("/api/client"), handler::list)
-				.andRoute(RequestPredicates.GET("/api/client/{id}"), handler::view);
+				.andRoute(RequestPredicates.GET("/api/client/{id}"), handler::view)
+				.andRoute(RequestPredicates.POST("/api/client"), handler::create)
+				.andRoute(RequestPredicates.PUT("/api/client/{id}"), handler::edit)
+				.andRoute(RequestPredicates.DELETE("/api/client/{id}"), handler::delete);
 	}
 }
