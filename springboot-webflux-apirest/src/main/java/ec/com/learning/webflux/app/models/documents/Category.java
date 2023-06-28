@@ -12,6 +12,7 @@ public class Category {
 	@NotBlank(message = "Can't be empty")
 	private String id;
 
+	@NotBlank(message = "Can't be empty")
 	private String name;
 
 	public Category() {
