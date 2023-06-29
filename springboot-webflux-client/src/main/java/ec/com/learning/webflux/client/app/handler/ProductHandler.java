@@ -2,6 +2,8 @@ package ec.com.learning.webflux.client.app.handler;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,17 @@ public class ProductHandler {
 	public Mono<ServerResponse> view(ServerRequest request) {
 		String id = request.pathVariable("id");
 		return service.findById(id).flatMap(p -> ServerResponse.ok().contentType(APPLICATION_JSON_UTF8).syncBody(p))
-				.switchIfEmpty(ServerResponse.notFound().build());
+				.switchIfEmpty(ServerResponse.notFound().build()).onErrorResume(error -> {
+					WebClientResponseException errorResponse = (WebClientResponseException) error;
+					if (errorResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
+						Map<String, Object> body = new HashMap<>();
+						body.put("error", "Product not found: ".concat(errorResponse.getMessage()));
+						body.put("timestamp", new Date());
+						body.put("status", errorResponse.getStatusCode().value());
+						return ServerResponse.status(HttpStatus.NOT_FOUND).syncBody(body);
+					}
+					return Mono.error(errorResponse);
+				});
 	}
 
 	public Mono<ServerResponse> create(ServerRequest request) {
@@ -55,13 +67,19 @@ public class ProductHandler {
 	public Mono<ServerResponse> edit(ServerRequest request) {
 		Mono<Product> product = request.bodyToMono(Product.class);
 		String id = request.pathVariable("id");
-		return product.flatMap(p -> ServerResponse.created(URI.create("/api/client/".concat(id)))
-				.contentType(APPLICATION_JSON_UTF8).body(service.update(p, id), Product.class));
+		return product.flatMap(p -> service.update(p, id)).flatMap(p -> ServerResponse
+				.created(URI.create("/api/client/".concat(p.getId()))).contentType(APPLICATION_JSON_UTF8).syncBody(p));
 	}
 
 	public Mono<ServerResponse> delete(ServerRequest request) {
 		String id = request.pathVariable("id");
-		return service.delete(id).then(ServerResponse.noContent().build());
+		return service.delete(id).then(ServerResponse.noContent().build()).onErrorResume(error -> {
+			WebClientResponseException errorResponse = (WebClientResponseException) error;
+			if (errorResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
+				return ServerResponse.notFound().build();
+			}
+			return Mono.error(errorResponse);
+		});
 	}
 
 	public Mono<ServerResponse> upload(ServerRequest request) {
@@ -69,6 +87,13 @@ public class ProductHandler {
 		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
 				.flatMap(file -> service.upload(file, id))
 				.flatMap(p -> ServerResponse.created(URI.create("/api/client/".concat(p.getId())))
-						.contentType(APPLICATION_JSON_UTF8).syncBody(p));
+						.contentType(APPLICATION_JSON_UTF8).syncBody(p))
+				.onErrorResume(error -> {
+					WebClientResponseException errorResponse = (WebClientResponseException) error;
+					if (errorResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
+						return ServerResponse.notFound().build();
+					}
+					return Mono.error(errorResponse);
+				});
 	}
 }
