@@ -5,6 +5,7 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
 
 import static org.springframework.http.MediaType.*;
 import org.springframework.stereotype.Component;
@@ -61,5 +62,13 @@ public class ProductHandler {
 	public Mono<ServerResponse> delete(ServerRequest request) {
 		String id = request.pathVariable("id");
 		return service.delete(id).then(ServerResponse.noContent().build());
+	}
+
+	public Mono<ServerResponse> upload(ServerRequest request) {
+		String id = request.pathVariable("id");
+		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
+				.flatMap(file -> service.upload(file, id))
+				.flatMap(p -> ServerResponse.created(URI.create("/api/client/".concat(p.getId())))
+						.contentType(APPLICATION_JSON_UTF8).syncBody(p));
 	}
 }
