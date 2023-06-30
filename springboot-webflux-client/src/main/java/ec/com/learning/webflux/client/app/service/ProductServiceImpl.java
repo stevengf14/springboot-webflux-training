@@ -22,11 +22,11 @@ import reactor.core.publisher.Mono;
 public class ProductServiceImpl implements ProductService {
 
 	@Autowired
-	private WebClient client;
+	private WebClient.Builder client;
 
 	@Override
 	public Flux<Product> findAll() {
-		return client.get().accept(APPLICATION_JSON_UTF8).exchange()
+		return client.build().get().accept(APPLICATION_JSON_UTF8).exchange()
 				.flatMapMany(response -> response.bodyToFlux(Product.class));
 	}
 
@@ -34,21 +34,22 @@ public class ProductServiceImpl implements ProductService {
 	public Mono<Product> findById(String id) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", id);
-		return client.get().uri("/{id}", params).accept(APPLICATION_JSON_UTF8).retrieve().bodyToMono(Product.class);
+		return client.build().get().uri("/{id}", params).accept(APPLICATION_JSON_UTF8).retrieve()
+				.bodyToMono(Product.class);
 		// .exchange()
 		// .flatMap(response -> response.bodyToMono(Product.class));
 	}
 
 	@Override
 	public Mono<Product> save(Product product) {
-		return client.post().accept(APPLICATION_JSON_UTF8).contentType(APPLICATION_JSON_UTF8)
+		return client.build().post().accept(APPLICATION_JSON_UTF8).contentType(APPLICATION_JSON_UTF8)
 				// .body(fromObject(product))
 				.syncBody(product).retrieve().bodyToMono(Product.class);
 	}
 
 	@Override
 	public Mono<Product> update(Product product, String id) {
-		return client.put().uri("/{id}", Collections.singletonMap("id", id)).accept(APPLICATION_JSON_UTF8)
+		return client.build().put().uri("/{id}", Collections.singletonMap("id", id)).accept(APPLICATION_JSON_UTF8)
 				.contentType(APPLICATION_JSON_UTF8)
 				// .body(fromObject(product))
 				.syncBody(product).retrieve().bodyToMono(Product.class);
@@ -56,7 +57,8 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public Mono<Void> delete(String id) {
-		return client.delete().uri("/{id}", Collections.singletonMap("id", id)).retrieve().bodyToMono(Void.class);
+		return client.build().delete().uri("/{id}", Collections.singletonMap("id", id)).retrieve()
+				.bodyToMono(Void.class);
 	}
 
 	@Override
@@ -65,8 +67,8 @@ public class ProductServiceImpl implements ProductService {
 		parts.asyncPart("file", file.content(), DataBuffer.class).headers(h -> {
 			h.setContentDispositionFormData("file", file.filename());
 		});
-		return client.post().uri("/upload/{id}", Collections.singletonMap("id", id)).contentType(MULTIPART_FORM_DATA)
-				.syncBody(parts.build()).retrieve().bodyToMono(Product.class);
+		return client.build().post().uri("/upload/{id}", Collections.singletonMap("id", id))
+				.contentType(MULTIPART_FORM_DATA).syncBody(parts.build()).retrieve().bodyToMono(Product.class);
 	}
 
 }
